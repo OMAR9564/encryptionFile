@@ -102,11 +102,25 @@ public class EncryptDecryptApplication {
 
 
     public static void encrypt(Key passwordKey, File inputFile) throws Exception {
-        performCrypto(Cipher.ENCRYPT_MODE, passwordKey, inputFile);
+        try{
+            performCrypto(Cipher.ENCRYPT_MODE, passwordKey, inputFile);
+            JOptionPane.showMessageDialog(null, "The File Has ENCRYPTED",
+                    "ENCRYPTED", JOptionPane.INFORMATION_MESSAGE);
+        }catch (Exception e){
+            JOptionPane.showMessageDialog(null, "We have a ERROR",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public static void decrypt(Key passwordKey, File inputFile) throws Exception {
-        performCrypto(Cipher.DECRYPT_MODE, passwordKey, inputFile);
+        try{
+            performCrypto(Cipher.DECRYPT_MODE, passwordKey, inputFile);
+            JOptionPane.showMessageDialog(null, "The File Has DECRYPTED",
+                    "DECRYPTED", JOptionPane.INFORMATION_MESSAGE);
+        }catch (Exception e){
+            JOptionPane.showMessageDialog(null, "We have a ERROR",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private static void performCrypto(int cipherMode, Key passwordKey, File inputFile) throws Exception {
