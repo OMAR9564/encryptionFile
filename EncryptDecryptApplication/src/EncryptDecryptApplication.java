@@ -11,16 +11,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
 
 public class EncryptDecryptApplication {
     private static final String ALGORITHM = "AES";
-
-    private static final String encryptExtansion = "ENCRYPT.bya";
-
+    private static final String encryptExtension = "ENCRYPT.bya";
     private static final int KEY_LENGTH = 256;
     private JPasswordField passwordField;
     private JLabel lblPass;
@@ -31,13 +28,12 @@ public class EncryptDecryptApplication {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Encrypt/Decrypt Uygulaması");
+            JFrame frame = new JFrame("Encrypt/Decrypt Application");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             EncryptDecryptApplication encryptDecryptApplication = new EncryptDecryptApplication();
             frame.setContentPane(encryptDecryptApplication.jPanel);
 
-            // Pencere boyutunu ayarla ve görünür yap
             frame.setSize(400, 200);
             frame.setVisible(true);
         });
@@ -53,13 +49,18 @@ public class EncryptDecryptApplication {
             public void actionPerformed(ActionEvent e) {
                 try {
                     char[] passwordChar = passwordField.getPassword();
+
                     if (passwordChar.length > 0) {
+                        //generate PBKDF2WithHmacSHA512 key using user entered password to encrypt and decrypt
                         Key key = generateKey(Arrays.toString(passwordChar));
                         String password = new String(passwordChar);
+
+                        //for more security remove all spaces
                         password.replace(" ", "");
 
+                        //control if fileTextFiled is end with encrypt extension
                         String filedText = openFileTextField.getText();
-                        if (filedText.contains(encryptExtansion)){
+                        if (filedText.contains(encryptExtension)){
                             decrypt(key, new File(openFileTextField.getText()));
                         }else {
                             encrypt(key, new File(openFileTextField.getText()));
@@ -74,6 +75,8 @@ public class EncryptDecryptApplication {
             }
         });
 
+
+        //open file browser when click on openFileButton
         openFileButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -93,6 +96,7 @@ public class EncryptDecryptApplication {
     private static Key generateKey(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
         // 16byte -> 128bit
         KeySpec keySpec = new PBEKeySpec(password.toCharArray(), new byte[16], 65536, KEY_LENGTH);
+        //generate SecretKeyFactory using algorithm
         SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
         byte[] keyBytes = secretKeyFactory.generateSecret(keySpec).getEncoded();
 
@@ -138,7 +142,7 @@ public class EncryptDecryptApplication {
         byte[] outputBytes = cipher.doFinal(inputBytes);
 
         String outputFileName = cipherMode == Cipher.ENCRYPT_MODE ?
-                fileName + encryptExtansion : fileName.replace(encryptExtansion, "");
+                fileName + encryptExtension : fileName.replace(encryptExtension, "");
 
         FileOutputStream outputStream = new FileOutputStream(outputFileName);
         outputStream.write(outputBytes);
