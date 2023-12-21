@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 public class EncryptDecryptApplication {
     private static final String ALGORITHM = "AES";
-    private static final String encryptExtension = "ENCRYPT.bya";
+    private static final String encryptExtension = ".ENCRYPT.bya";
     private static final int KEY_LENGTH = 256;
     private JPasswordField passwordField;
     private JLabel lblPass;
