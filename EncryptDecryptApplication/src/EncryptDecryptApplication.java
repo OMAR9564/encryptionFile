@@ -37,11 +37,7 @@ public class EncryptDecryptApplication {
             frame.setSize(400, 200);
             frame.setVisible(true);
         });
-
-
     }
-
-
 
     public EncryptDecryptApplication() {
         encryptDecryptButton.addActionListener(new ActionListener() {
@@ -54,10 +50,8 @@ public class EncryptDecryptApplication {
                         //generate PBKDF2WithHmacSHA512 key using user entered password to encrypt and decrypt
                         Key key = generateKey(Arrays.toString(passwordChar));
                         String password = new String(passwordChar);
-
                         //for more security remove all spaces
                         password.replace(" ", "");
-
                         //control if fileTextFiled is end with encrypt extension
                         String filedText = openFileTextField.getText();
                         if (filedText.contains(encryptExtension)){
@@ -75,7 +69,6 @@ public class EncryptDecryptApplication {
             }
         });
 
-
         //open file browser when click on openFileButton
         openFileButton.addActionListener(new ActionListener() {
             @Override
@@ -87,12 +80,9 @@ public class EncryptDecryptApplication {
                     String filePath = fileChooser.getSelectedFile().getAbsolutePath();
                     openFileTextField.setText(filePath);
                 }
-
             }
         });
     }
-
-
     private static Key generateKey(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
         // 16byte -> 128bit
         KeySpec keySpec = new PBEKeySpec(password.toCharArray(), new byte[16], 65536, KEY_LENGTH);
@@ -104,53 +94,86 @@ public class EncryptDecryptApplication {
         return new SecretKeySpec(keyBytes, ALGORITHM);
     }
 
-
     public static void encrypt(Key passwordKey, File inputFile) throws Exception {
         try{
             performCrypto(Cipher.ENCRYPT_MODE, passwordKey, inputFile);
-            JOptionPane.showMessageDialog(null, "The File Has ENCRYPTED",
-                    "ENCRYPTED", JOptionPane.INFORMATION_MESSAGE);
+
         }catch (Exception e){
+            e.printStackTrace();
             JOptionPane.showMessageDialog(null, "We have a ERROR",
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-
     public static void decrypt(Key passwordKey, File inputFile) throws Exception {
         try{
             performCrypto(Cipher.DECRYPT_MODE, passwordKey, inputFile);
-            JOptionPane.showMessageDialog(null, "The File Has DECRYPTED",
-                    "DECRYPTED", JOptionPane.INFORMATION_MESSAGE);
         }catch (Exception e){
+            e.printStackTrace();
+            String errorMessage = e.getMessage();
+            if (errorMessage.contains("Given final block not properly padded") && errorMessage != null){
+                JOptionPane.showMessageDialog(null, "The Password Has Incorrect",
+                        "Password Error", JOptionPane.ERROR_MESSAGE);
+            }
+            else{
+                JOptionPane.showMessageDialog(null, "We have a ERROR",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    private static void performCrypto(int cipherMode, Key passwordKey, File inputFile) throws Exception {
+        try {
+            byte[] passwordBytes = passwordKey.getEncoded();
+            SecretKey key = new SecretKeySpec(passwordBytes, "AES");
+
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(cipherMode, key);
+
+            FileInputStream inputStream = new FileInputStream(inputFile);
+
+            String fileName = inputFile.getName();
+            String fileExtension = "";
+            if (cipherMode == 1) {
+                String[] splitFileName = fileName.split("\\.");
+                fileExtension = "." + splitFileName[splitFileName.length - 1];
+
+            } else if (cipherMode == 2) {
+                String fileNameWithoutEncryptExtantion = fileName.replace(encryptExtension, "");
+                String[] splitFileName = fileNameWithoutEncryptExtantion.split("\\.");
+                fileExtension = "." + splitFileName[splitFileName.length - 1];
+            }
+
+            byte[] inputBytes = new byte[inputStream.available()];
+            inputStream.read(inputBytes);
+            byte[] outputBytes = cipher.doFinal(inputBytes);
+
+            JFileChooser fileChooser = new JFileChooser();
+
+            int result = fileChooser.showSaveDialog(null);
+
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+
+                String outputFileName = cipherMode == Cipher.ENCRYPT_MODE ?
+                        selectedFile.getAbsolutePath() + fileExtension + encryptExtension :
+                        selectedFile.getAbsolutePath() + fileExtension;
+
+                FileOutputStream outputStream = new FileOutputStream(outputFileName);
+                outputStream.write(outputBytes);
+
+                inputStream.close();
+                outputStream.close();
+                if (cipherMode == 1){
+                    JOptionPane.showMessageDialog(null, "The File Has ENCRYPTED",
+                            "ENCRYPTED", JOptionPane.INFORMATION_MESSAGE);
+                }else if (cipherMode == 2){
+                    JOptionPane.showMessageDialog(null, "The File Has DECRYPTED",
+                            "DECRYPTED", JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
             JOptionPane.showMessageDialog(null, "We have a ERROR",
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-
-    private static void performCrypto(int cipherMode, Key passwordKey, File inputFile) throws Exception {
-        byte[] passwordBytes = passwordKey.getEncoded();
-        SecretKey key = new SecretKeySpec(passwordBytes, "AES");
-
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(cipherMode, key);
-
-        FileInputStream inputStream = new FileInputStream(inputFile);
-        String fileName = inputFile.getName();
-
-        byte[] inputBytes = new byte[inputStream.available()];
-        inputStream.read(inputBytes);
-        byte[] outputBytes = cipher.doFinal(inputBytes);
-
-        String outputFileName = cipherMode == Cipher.ENCRYPT_MODE ?
-                fileName + encryptExtension : fileName.replace(encryptExtension, "");
-
-        FileOutputStream outputStream = new FileOutputStream(outputFileName);
-        outputStream.write(outputBytes);
-
-        inputStream.close();
-        outputStream.close();
-    }
-
-
-
 }
